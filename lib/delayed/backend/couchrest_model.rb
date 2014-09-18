@@ -58,21 +58,28 @@ module Delayed
           Time.now.utc
         end
 
-        def self.find_available(worker_name, limit = 5, max_run_time = ::Delayed::Worker.max_run_time)
+        def self.reserve(worker, max_run_time = Worker.max_run_time)
+          find_available(worker, worker.read_ahead, max_run_time).detect do |job|
+            job.lock_exclusively!(max_run_time, worker.name)
+          end
+        end
+
+        def self.find_available(worker, limit = 5, max_run_time = ::Delayed::Worker.max_run_time)
+          worker_name = worker.name
           ready  = ready_jobs
-          mine   = my_jobs(worker_name) 
+          mine   = my_jobs(worker_name)
           expire = expired_jobs(max_run_time)
           jobs_array = []
           [ready, mine, expire].each do |view_results|
             view_results.each do |result|
               jobs_array << result
-            end  
+            end
           end
-          jobs_array[0..limit-1].sort_by { |j| j.priority }  
-          #jobs   = (ready + mine + expire)
-          jobs_array   = jobs.find_all { |j| j.priority >= Worker.min_priority } if Worker.min_priority
-          jobs_array   = jobs.find_all { |j| j.priority <= Worker.max_priority } if Worker.max_priority
-          jobs_array
+          jobs_array.sort_by { |j| j.priority }
+          jobs_array   = jobs_array.find_all { |j| j.priority >= Worker.min_priority } if Worker.min_priority
+          jobs_array   = jobs_array.find_all { |j| j.priority <= Worker.max_priority } if Worker.max_priority
+          jobs_array   = jobs_array.find_all { |j| Worker.queues.include? j.queue } if Worker.queues.any?
+          jobs_array[0..limit-1]
         end
 
         def lock_exclusively!(max_run_time, worker = worker_name)
