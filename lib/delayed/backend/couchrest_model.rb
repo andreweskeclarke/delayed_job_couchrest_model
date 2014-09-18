@@ -102,6 +102,7 @@ module Delayed
         def reload(*args)
           reset
           super
+          self
         end
 
         private
