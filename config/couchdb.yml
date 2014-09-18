@@ -1,0 +1,9 @@
+development:
+  host: localhost
+  port: 5984
+  https_port: 6984
+  ssl: false
+  prefix: dj_couchrest
+  suffix: test
+  username: test
+  password: test

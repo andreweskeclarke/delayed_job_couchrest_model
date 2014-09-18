@@ -1,6 +1,6 @@
 class CouchRest::Model::Base
   yaml_as "tag:ruby.yaml.org,2002:Couchdb"
-  
+
   def reload
     job = self.class.get self['_id']
     job.each {|k,v| self[k] = v}
