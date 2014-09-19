@@ -75,7 +75,7 @@ module Delayed
               jobs_array << result
             end
           end
-          jobs_array.sort_by { |j| j.priority }
+          jobs_array   = jobs_array.sort_by { |j| j.priority }
           jobs_array   = jobs_array.find_all { |j| j.priority >= Worker.min_priority } if Worker.min_priority
           jobs_array   = jobs_array.find_all { |j| j.priority <= Worker.max_priority } if Worker.max_priority
           jobs_array   = jobs_array.find_all { |j| Worker.queues.include? j.queue } if Worker.queues.any?
@@ -109,6 +109,10 @@ module Delayed
         def reload(*args)
           reset
           super
+          if (self.payload_object && self.payload_object.respond_to?(:object) && self.payload_object.object.respond_to?(:reload))
+            self.payload_object.object.reload
+            self.handler = self.payload_object.to_yaml
+          end
           self
         end
 
@@ -120,7 +124,7 @@ module Delayed
 
         def self.my_jobs(worker_name)
           by_failed_at_locked_by_and_run_at.startkey([nil, worker_name]).endkey([nil, worker_name, {}])
-        end  
+        end
 
         def self.expired_jobs(max_run_time)
           by_failed_at_locked_at_and_run_at.startkey([nil, '0']).endkey([nil, db_time_now - max_run_time, db_time_now])
