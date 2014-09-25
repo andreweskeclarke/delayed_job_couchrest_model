@@ -16,3 +16,5 @@ https://github.com/raldred/delayed_job_couchrest_model
 
 Going forward there will be a attempt to merge these changes into the
 original authors' repos.
+
+Waiting to hear back from https://groups.google.com/forum/#!topic/delayed_job/BQQJA4X1wXc
